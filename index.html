@@ -1,0 +1,196 @@
+<html dir="rtl">
+<head>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tenserflow</title>
+<script src="index.js"></script>
+<script src="https://ramedde2001.github.io/ten/data.js"></script>
+<script src="tf.min.js"></script>
+<link rel="stylesheet" href="./css/bootstrap.css"/>
+<link rel="stylesheet" href="./css/bootstrap-rtl.css"/>
+<link rel="stylesheet"href="css/style.css">
+</head>
+<body>
+<div id="page1" style="display:none">
+<div  class="title">شات</div>
+
+<div  class="box" id="res">
+
+</div>
+
+
+<div class="sent">
+<input  id="words" type="text"/>
+
+
+<button   id="but"  onclick="pridict()">ارسل</button>
+
+</div>
+</div>
+<div id="page2" >
+<h1>يتم تدريب النمودج<h1>
+<div id="lose"><div>
+</div>
+<script>
+
+
+data=getdata(chats)
+texts=data.questions
+vals=data.table
+ansers=data.ansers
+
+
+numanser=Math.max(...vals)+1
+context=""
+
+
+
+st= extractDictionary(texts)
+ 
+ 
+ 
+
+
+var model=tf.sequential();
+tr()
+async function tr()
+{
+try{
+model=await tf.loadLayersModel("https://ramedde2001.github.io/ten/test.json")
+console.log("load")
+document.getElementById("page1").style.display='block';
+document.getElementById("page2").style.display='none';
+
+}
+catch(err)
+   {
+console.log(err)
+console.log("training ..")
+input=tfdivvector(texts,st)
+
+ model = tf.sequential();
+
+// First layer must have an input shape defined.
+model.add(tf.layers.dense({units: 300, inputShape: [st.words.length]}));
+// Afterwards, TF.js does automatic shape inference.
+model.add(tf.layers.dense({units: numanser,activation:'softmax'}));
+model.compile({optimizer: 'adam', loss: 'categoricalCrossentropy'});
+
+// Inspect the inferred shape of the model's output, which equals
+// `[null, 4]`. The 1st dimension is the undetermined batch dimension; the
+// 2nd is the output size of the model's last layer.
+ 
+
+
+test()
+
+
+
+
+
+     }
+}
+
+
+
+
+
+
+async function test()
+{
+for (let i = 1; i < 1000 ; ++i) {
+const h=await model.fit(tf.tensor(input),tf.oneHot(vals,numanser))
+console.log(h.history.loss[0])
+document.getElementById("lose").innerText= i
+
+
+}
+savem()
+document.getElementById("page1").style.display='block';
+document.getElementById("page2").style.display='none';
+
+
+}
+async function savem()
+{
+await model.save("localstorage://test");
+
+}
+function chatel(text,dir)
+{
+res=document.getElementById("res")
+
+var anser=document.createElement("div")
+anser.innerText=text
+anser.className=" msg  "+dir
+res.appendChild(anser)
+}
+
+function pridict()
+{
+var t=document.getElementById("words")
+
+chatel(t.value,"left")
+vl=tf.tensor([bow(t.value,st)])
+console.log(vl)
+testf=model.predict(vl).dataSync()
+arr=Array.from(testf)
+
+console.log("result"+ arr)
+if(context!="")
+{
+newarr=[]
+for(i=0;i<arr.length;i++)
+{
+if(chats[i].filter==context)
+{
+newarr.push(arr[i]+0.25)
+}
+else
+newarr.push(arr[i])
+
+}
+arr=newarr
+context=""
+}
+else
+{
+newarr=[]
+for(i=0;i<arr.length;i++)
+{
+if(chats[i].filter)
+{
+newarr.push(arr[i]-0.05)
+}
+else
+newarr.push(arr[i])
+
+}
+arr=newarr
+context=""
+
+}
+if(Math.max(...arr)>0.10)
+{
+console.log("index of result"+arr.indexOf(Math.max(...arr)))
+
+chatel(ansers[arr.indexOf(Math.max(...arr))],"right")
+
+if(chats[arr.indexOf(Math.max(...arr))].context)
+{
+context=chats[arr.indexOf(Math.max(...arr))].context
+}
+
+//res.innerText=ansers[arr.indexOf(Math.max(...arr))]
+}else
+{
+chatel("لم افهم هل يمكن ان تحدد موضوع سؤالك","right")
+context="subjet"
+}
+
+
+}
+
+</script>
+
+</body>
+</html>
